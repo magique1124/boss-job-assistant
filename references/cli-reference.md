@@ -24,16 +24,22 @@ boss logout
 ### 职位发现
 
 ```bash
-boss search "<关键词>" --city <城市> [--welfare "双休,五险一金"] [--active online|1d|3d|7d|30d]
+boss search "<关键词>" --city <城市> [--welfare "双休,五险一金"] [--salary "15-25K"] [--page N] [--sort score]
 boss detail <security_id>     # 职位详情
 boss show <编号>               # 按编号回看缓存结果
 boss cities                    # 城市代码表
 boss history                   # 搜索历史
 ```
 
+- v3.0.0（PyPI 当前版）search 参数：--url/--preset/--city/--salary/--experience/--education/--industry/--scale/--stage/--job-type/--welfare/--page/--with-score/--sort。`--active` 活跃度筛选仅更新源码版有，以 `boss search --help` 为准。
+
 - `--welfare`：自动翻页补抓后按 AND 逻辑真实匹配，可 `--sort score` 按本地匹配分排序。
-- `--active online` 请求量与普通搜索相同、风控低，默认用它；`1d/3d` 等更精确但更慢、风控更高。
 - 排除项（公司名、职位名、JD 关键词）在 Agent 侧过滤：`search` 结果里逐项检查后决定是否 shortlist。
+
+### 风控应对（实测）
+
+- headless 内核（patchright headless）直接发请求，实测触发 ACCOUNT_RISK code 36「账户存在异常行为」。触发后**当天停止自动化**，引导用户回 BOSS 官方 App/网页完成安全验证。
+- 低风险替代：复用用户真实 Chrome 会话（不新建页面、不注入 Cookie）——完全退出 Chrome 后以调试端口重启（macOS：`open -na "Google Chrome" --args --remote-debugging-port=9222`），正常登录 zhipin.com，然后 `boss --browser-source existing-browser --cdp-url http://localhost:9222 search ...`。
 
 ### 本地整理与统计
 

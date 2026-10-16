@@ -41,11 +41,11 @@ boss status        # 确认登录态有效
 ### 第 2 步：搜索与筛选
 
 ```bash
-boss search "<关键词>" --city <城市> --welfare "<福利>" --active online
+boss search "<关键词>" --city <城市> --welfare "<福利>" --page 1
 boss detail <security_id>   # 对候选岗位逐个看详情
 ```
 
-- `--active online` 只保留当前在线 HR，把打招呼机会留给活岗位（低风控档位，默认用它）。
+- 可用的筛选参数以 `boss search --help` 为准（PyPI 当前 v3.0.0 支持 --city/--salary/--experience/--education/--industry/--scale/--stage/--job-type/--welfare/--sort；`--active` 活跃度筛选仅在更新源码版可用）。
 - 结合 `pagination` 翻页拿够候选；用第 1 步的排除项过滤（公司名、职位名、JD 内容）。
 - 把通过筛选的岗位存入本地候选池并打标签，便于离线对比：
 
@@ -71,7 +71,7 @@ boss apply <security_id> <job_id>          # 需要发简历/进一步动作时
 ```
 
 - CLI 自带高斯延迟节流，不要自行加速或并发调用。
-- 命中风控（错误码含平台风险/安全页）时**立即停止**，保存断点，把 `recovery_action` 转述给用户，等用户处理后再 `boss pipeline` 或 wizard 恢复。
+- **风控应对（重要，实测经验）**：headless 内核直接请求容易触发平台风控（ACCOUNT_RISK code 36 账户异常）。更稳的方式是复用用户真实 Chrome 会话：先完全退出 Chrome，再以 `open -na "Google Chrome" --args --remote-debugging-port=9222` 启动，在浏览器里正常登录 zhipin.com 后，用 `boss --browser-source existing-browser --cdp-url http://localhost:9222 search ...`（该模式不新建页面、不注入 Cookie）。触发风控后立即停手，引导用户回 BOSS 官方 App/网页完成安全验证，当天不再重试。
 - 单次会话投递量遵守用户设定的数量。
 
 ### 第 5 步：更新投递追踪表
