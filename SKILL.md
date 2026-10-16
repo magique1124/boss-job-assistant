@@ -71,7 +71,9 @@ boss apply <security_id> <job_id>          # 需要发简历/进一步动作时
 ```
 
 - CLI 自带高斯延迟节流，不要自行加速或并发调用。
-- **风控应对（重要，实测经验）**：headless 内核直接请求容易触发平台风控（ACCOUNT_RISK code 36 账户异常）。更稳的方式是复用用户真实 Chrome 会话：先完全退出 Chrome，再以 `open -na "Google Chrome" --args --remote-debugging-port=9222` 启动，在浏览器里正常登录 zhipin.com 后，用 `boss --browser-source existing-browser --cdp-url http://localhost:9222 search ...`（该模式不新建页面、不注入 Cookie）。触发风控后立即停手，引导用户回 BOSS 官方 App/网页完成安全验证，当天不再重试。
+- **风控应对（重要，实测经验）**：headless 内核直接请求容易触发平台风控（ACCOUNT_RISK code 36 账户异常）。更稳的方式是复用用户真实 Chrome 会话：先完全退出 Chrome，再以独立配置启动调试端口（**Chrome 136+ 默认配置不开放调试端口，必须用独立 --user-data-dir**）：
+  `open -na "Google Chrome" --args --user-data-dir=~/.boss-job-chrome --remote-debugging-port=9333 --no-first-run`
+  首次在该窗口打开 zhipin.com 登录一次（登录态保留在独立配置里），之后用 `boss --browser-source existing-browser --cdp-url http://localhost:9333 search ...`（该模式不新建页面、不注入 Cookie，实测可通过搜索）。若页面被重定向到带 `_security_check` 参数的安全验证页，引导用户在窗口里完成滑块后新开标签页重试。触发风控后立即停手，引导用户回 BOSS 官方 App/网页完成安全验证，当天不再重试。
 - 单次会话投递量遵守用户设定的数量。
 
 ### 第 5 步：更新投递追踪表

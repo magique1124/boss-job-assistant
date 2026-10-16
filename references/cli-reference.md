@@ -39,7 +39,11 @@ boss history                   # 搜索历史
 ### 风控应对（实测）
 
 - headless 内核（patchright headless）直接发请求，实测触发 ACCOUNT_RISK code 36「账户存在异常行为」。触发后**当天停止自动化**，引导用户回 BOSS 官方 App/网页完成安全验证。
-- 低风险替代：复用用户真实 Chrome 会话（不新建页面、不注入 Cookie）——完全退出 Chrome 后以调试端口重启（macOS：`open -na "Google Chrome" --args --remote-debugging-port=9222`），正常登录 zhipin.com，然后 `boss --browser-source existing-browser --cdp-url http://localhost:9222 search ...`。
+- 低风险替代（已实测跑通）：复用用户真实 Chrome 会话（不新建页面、不注入 Cookie）。注意 **Chrome 136+ 默认配置拒绝调试端口**，必须用独立配置：
+  `open -na "Google Chrome" --args --user-data-dir=~/.boss-job-chrome --remote-debugging-port=9333 --no-first-run`
+  首次在独立配置里登录 zhipin.com 一次（登录态持久），之后 `boss --browser-source existing-browser --cdp-url http://localhost:9333 search ...`。
+- 若标签页被重定向到 `...?_security_check=1_...`：说明平台要求安全验证，引导用户在窗口里完成滑块；该 URL 下命令会一直等待直至超时，验证后**新开标签页**再跑（旧标签页状态可能卡住）。
+- 端口被其他应用占用时（如本机 9222 被其他嵌入浏览器占用），换一个端口（如 9333）并全程一致。
 
 ### 本地整理与统计
 
